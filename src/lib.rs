@@ -75,10 +75,10 @@ fn group_tlg(file_name: &str) -> String {
     String::from(temp)
 }
 
-pub fn run() -> io::Result<()> {
+pub fn run(dir_name: &str) -> io::Result<()> {
     let mut outer_map = HashMap::new();
 
-    let b_dirs: Vec<PathBuf> = WalkDir::new("zzz")
+    let b_dirs: Vec<PathBuf> = WalkDir::new(dir_name)
         .into_iter()
         .filter_map(Result::ok)
         .filter(|e| e.file_type().is_dir())
@@ -104,7 +104,7 @@ pub fn run() -> io::Result<()> {
         outer_map.insert(bd.to_owned(), groups.to_owned());
     }
 
-    println!("{:?}", outer_map);
+    println!("{:#?}", outer_map);
 
     Ok(())
 }
