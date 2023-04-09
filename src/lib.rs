@@ -5,8 +5,9 @@ use std::path::PathBuf;
 use walkdir::{DirEntry, WalkDir};
 
 const DIRS: [&str; 3] = ["zzz/a", "zzz/d", "zzz/g"];
-const FILES: [&str; 5] = [
+const FILES: [&str; 6] = [
     "t_bla.out",
+    "t_bla.txt",
     "eer_bla.out",
     "l_01_bla.out",
     "l_02_bla.out",
@@ -134,6 +135,7 @@ pub fn run(dir_name: &str) -> io::Result<()> {
             .into_iter()
             .filter_map(Result::ok)
             .filter(|e| e.file_type().is_file())
+            .filter(|e| ["out", "pdf"].contains(&e.path().extension().unwrap().to_str().unwrap()))
         {
             let f_name = String::from(fe.file_name().to_string_lossy());
             let group = group_tlg(&f_name);
