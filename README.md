@@ -1,4 +1,4 @@
 # Search a directory for TLGs
 
-- Utility to recursively search for a directory
-- In the found directory search for TLGs and count them
+- Utility to recursively search the supplied directory for `data_analysis/*csr*/prod/output`
+- In the found directories search for TLGs (`t_`, `l_`, `g_`) and count them

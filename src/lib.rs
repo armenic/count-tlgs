@@ -23,7 +23,9 @@ fn clean_many_dirs() -> io::Result<()> {
 
 fn create_many_dirs() -> io::Result<()> {
     for dir in DIRS {
-        let path: PathBuf = [dir, "b", "c"].iter().collect();
+        let path: PathBuf = [dir, "data_analysis/primary_csr/prod/output", "c"]
+            .iter()
+            .collect();
         fs::create_dir_all(path)?;
     }
 
@@ -62,6 +64,17 @@ pub fn setup_test_files() -> io::Result<()> {
     Ok(())
 }
 
+#[cfg(test)]
+mod setup_tests {
+    use super::*;
+
+    #[test]
+    fn test_setup() -> io::Result<()> {
+        setup_test_files()?;
+        Ok(())
+    }
+}
+
 fn group_tlg(file_name: &str) -> String {
     let first_two_chars: String = file_name.chars().take(2).collect();
 
@@ -75,6 +88,19 @@ fn group_tlg(file_name: &str) -> String {
     String::from(temp)
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_tlg() {
+        assert_eq!(group_tlg("l_abc.out"), "listing");
+        assert_eq!(group_tlg("t_abc.out"), "table");
+        assert_eq!(group_tlg("g_abc.out"), "graph");
+        assert_eq!(group_tlg("ll_abc.out"), "other");
+    }
+}
+
 pub fn run(dir_name: &str) -> io::Result<()> {
     let mut outer_map = HashMap::new();
 
@@ -82,7 +108,21 @@ pub fn run(dir_name: &str) -> io::Result<()> {
         .into_iter()
         .filter_map(Result::ok)
         .filter(|e| e.file_type().is_dir())
-        .filter(|e| e.file_name() == "b")
+        .filter(|e| {
+            e.path().components().any(|c| {
+                c.as_os_str()
+                    .to_string_lossy()
+                    .to_lowercase()
+                    .contains("csr")
+            })
+        })
+        .filter(|e| e.path().components().any(|c| c.as_os_str() == "prod"))
+        .filter(|e| {
+            e.path()
+                .components()
+                .any(|c| c.as_os_str() == "data_analysis")
+        })
+        .filter(|e| e.file_name() == "output")
         .map(|e| e.path().to_owned())
         .collect();
 
@@ -107,18 +147,4 @@ pub fn run(dir_name: &str) -> io::Result<()> {
     println!("{:#?}", outer_map);
 
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    // Note this useful idiom: importing names from outer (for mod tests) scope.
-    use super::*;
-
-    #[test]
-    fn test_add() {
-        assert_eq!(group_tlg("l_abc.out"), "listing");
-        assert_eq!(group_tlg("t_abc.out"), "table");
-        assert_eq!(group_tlg("g_abc.out"), "graph");
-        assert_eq!(group_tlg("ll_abc.out"), "other");
-    }
 }
