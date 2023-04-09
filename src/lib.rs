@@ -5,8 +5,9 @@ use std::path::PathBuf;
 use walkdir::{DirEntry, WalkDir};
 
 const DIRS: [&str; 3] = ["zzz/a", "zzz/d", "zzz/g"];
-const FILES: [&str; 6] = [
+const FILES: [&str; 7] = [
     "t_bla.out",
+    "t_bla.pdf",
     "t_bla.txt",
     "eer_bla.out",
     "l_01_bla.out",
@@ -130,6 +131,10 @@ pub fn run(dir_name: &str) -> io::Result<()> {
     for bd in b_dirs {
         let mut groups = HashMap::new();
 
+        // Need unique file names in case the same file exists in different
+        // formats
+        let mut file_names_stack: Vec<String> = Vec::new();
+
         for fe in WalkDir::new(&bd)
             .max_depth(1)
             .into_iter()
@@ -138,7 +143,12 @@ pub fn run(dir_name: &str) -> io::Result<()> {
             .filter(|e| ["out", "pdf"].contains(&e.path().extension().unwrap().to_str().unwrap()))
         {
             let f_name = String::from(fe.file_name().to_string_lossy());
+            let f_base = fe.path().file_stem().unwrap().to_str().unwrap().to_string();
+            if file_names_stack.contains(&f_base) {
+                continue;
+            }
             let group = group_tlg(&f_name);
+            file_names_stack.push(f_base);
             let counter = groups.entry(group).or_insert(0);
             *counter += 1;
         }
