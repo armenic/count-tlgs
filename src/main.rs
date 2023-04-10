@@ -11,6 +11,7 @@ fn main() -> io::Result<()> {
     println!("Searching directory {} for TLGs", args[1]);
 
     learn_io::setup_test_files()?;
-    learn_io::run(&args[1])?;
+    let b_dirs = learn_io::prod_dirs(&args[1]);
+    learn_io::run(b_dirs)?;
     Ok(())
 }

@@ -1,3 +1,4 @@
+use glob::{glob_with, MatchOptions};
 use std::collections::HashMap;
 use std::fs::{self, OpenOptions};
 use std::io;
@@ -25,7 +26,7 @@ fn clean_many_dirs() -> io::Result<()> {
 
 fn create_many_dirs() -> io::Result<()> {
     for dir in DIRS {
-        let path: PathBuf = [dir, "data_analysis/primary_csr/prod/output", "c"]
+        let path: PathBuf = [dir, "data_analysis/primary_cSr/prod/output", "c"]
             .iter()
             .collect();
         fs::create_dir_all(path)?;
@@ -73,6 +74,45 @@ mod setup_tests {
     #[test]
     fn test_setup() -> io::Result<()> {
         setup_test_files()?;
+        // Level 1 files
+        let mut de = fs::read_dir("zzz")?
+            .map(|res| res.map(|e| e.path().into_os_string()))
+            .collect::<Result<Vec<_>, io::Error>>()?;
+        de.sort();
+
+        let mut expected: Vec<PathBuf> = ["a", "d", "g"]
+            .iter()
+            // PathBuf will properly use dividers based on OS
+            .map(|d| PathBuf::from(String::from("zzz/") + d))
+            .collect();
+        expected.sort();
+
+        assert_eq!(expected, de);
+
+        // Level 2 files
+        let mut de = fs::read_dir("zzz/g")?
+            .map(|res| res.map(|e| e.path().into_os_string()))
+            .collect::<Result<Vec<_>, io::Error>>()?;
+        de.sort();
+
+        let mut expected: Vec<PathBuf> = [
+            "data_analysis",
+            "t_bla.out",
+            "t_bla.pdf",
+            "t_bla.txt",
+            "eer_bla.out",
+            "l_01_bla.out",
+            "l_02_bla.out",
+            "g_bla.pdf",
+        ]
+        .iter()
+        // PathBuf will properly use dividers based on OS
+        .map(|d| PathBuf::from(String::from("zzz/g/") + d))
+        .collect();
+        expected.sort();
+
+        assert_eq!(expected, de);
+
         Ok(())
     }
 }
@@ -91,7 +131,7 @@ fn group_tlg(file_name: &str) -> String {
 }
 
 #[cfg(test)]
-mod tests {
+mod tlg_tests {
     use super::*;
 
     #[test]
@@ -103,30 +143,51 @@ mod tests {
     }
 }
 
-pub fn run(dir_name: &str) -> io::Result<()> {
-    let mut outer_map = HashMap::new();
+pub fn prod_dirs(dir_name: &str) -> Vec<PathBuf> {
+    let options = MatchOptions {
+        case_sensitive: false,
+        require_literal_separator: false,
+        require_literal_leading_dot: false,
+    };
 
-    let b_dirs: Vec<PathBuf> = WalkDir::new(dir_name)
-        .into_iter()
-        .filter_map(Result::ok)
-        .filter(|e| e.file_type().is_dir())
-        .filter(|e| {
-            e.path().components().any(|c| {
-                c.as_os_str()
-                    .to_string_lossy()
-                    .to_lowercase()
-                    .contains("csr")
-            })
-        })
-        .filter(|e| e.path().components().any(|c| c.as_os_str() == "prod"))
-        .filter(|e| {
-            e.path()
-                .components()
-                .any(|c| c.as_os_str() == "data_analysis")
-        })
-        .filter(|e| e.file_name() == "output")
-        .map(|e| e.path().to_owned())
+    let mut f: Vec<PathBuf> = Vec::new();
+    for entry in glob_with(
+        &(String::from(dir_name) + "/**/data_analysis/*csr*/prod/output/"),
+        options,
+    )
+    .unwrap()
+    {
+        f.push(entry.unwrap());
+    }
+
+    f
+}
+
+#[cfg(test)]
+mod prod_dirs_tests {
+    use super::*;
+
+    #[test]
+    fn test_prod_dirs() {
+        let mut b_dirs = prod_dirs("zzz");
+        b_dirs.sort();
+
+        let expected: Vec<PathBuf> = [
+            "zzz/a/data_analysis/primary_cSr/prod/output",
+            "zzz/d/data_analysis/primary_cSr/prod/output",
+            "zzz/g/data_analysis/primary_cSr/prod/output",
+        ]
+        .iter()
+        // PathBuf will properly use dividers based on OS
+        .map(|d| PathBuf::from(d))
         .collect();
+
+        assert_eq!(b_dirs, expected)
+    }
+}
+
+pub fn run(b_dirs: Vec<PathBuf>) -> io::Result<()> {
+    let mut outer_map = HashMap::new();
 
     for bd in b_dirs {
         let mut groups = HashMap::new();
@@ -159,4 +220,17 @@ pub fn run(dir_name: &str) -> io::Result<()> {
     println!("{:#?}", outer_map);
 
     Ok(())
+}
+
+#[cfg(test)]
+mod run_tests {
+    use super::*;
+
+    #[test]
+    fn test_run() -> io::Result<()> {
+        setup_test_files()?;
+        let b_dirs = prod_dirs("zzz");
+        run(b_dirs)?;
+        Ok(())
+    }
 }
