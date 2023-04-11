@@ -143,7 +143,7 @@ mod tlg_tests {
     }
 }
 
-pub fn prod_dirs(dir_name: &str) -> Vec<PathBuf> {
+pub fn prod_dirs(dir_name: &str, output_dir: &str) -> Vec<PathBuf> {
     let options = MatchOptions {
         case_sensitive: false,
         require_literal_separator: false,
@@ -151,12 +151,7 @@ pub fn prod_dirs(dir_name: &str) -> Vec<PathBuf> {
     };
 
     let mut f: Vec<PathBuf> = Vec::new();
-    for entry in glob_with(
-        &(String::from(dir_name) + "/**/data_analysis/*csr*/prod/output/"),
-        options,
-    )
-    .unwrap()
-    {
+    for entry in glob_with(&(String::from(dir_name) + output_dir), options).unwrap() {
         f.push(entry.unwrap());
     }
 
@@ -169,7 +164,7 @@ mod prod_dirs_tests {
 
     #[test]
     fn test_prod_dirs() {
-        let mut b_dirs = prod_dirs("zzz");
+        let mut b_dirs = prod_dirs("zzz", "/**/data_analysis/*csr*/prod/output/");
         b_dirs.sort();
 
         let expected: Vec<PathBuf> = [
@@ -187,10 +182,10 @@ mod prod_dirs_tests {
 }
 
 pub fn run(b_dirs: Vec<PathBuf>) -> io::Result<()> {
-    let mut outer_map = HashMap::new();
+    let mut dir_names = HashMap::new();
 
     for bd in b_dirs {
-        let mut groups = HashMap::new();
+        let mut counts = HashMap::new();
 
         // Need unique file names in case the same file exists in different
         // formats
@@ -210,14 +205,17 @@ pub fn run(b_dirs: Vec<PathBuf>) -> io::Result<()> {
             }
             let group = group_tlg(&f_name);
             file_names_stack.push(f_base);
-            let counter = groups.entry(group).or_insert(0);
+            let counter = counts.entry(group).or_insert(0);
             *counter += 1;
         }
 
-        outer_map.insert(bd.to_owned(), groups.to_owned());
+        dir_names.insert(
+            bd.parent().unwrap().parent().unwrap().to_owned(),
+            counts.to_owned(),
+        );
     }
 
-    println!("{:#?}", outer_map);
+    println!("{:#?}", dir_names);
 
     Ok(())
 }
@@ -229,7 +227,7 @@ mod run_tests {
     #[test]
     fn test_run() -> io::Result<()> {
         setup_test_files()?;
-        let b_dirs = prod_dirs("zzz");
+        let b_dirs = prod_dirs("zzz", "/**/data_analysis/*csr*/prod/output/");
         run(b_dirs)?;
         Ok(())
     }

@@ -8,10 +8,18 @@ fn main() -> io::Result<()> {
         process::exit(1)
     }
 
-    println!("Searching directory {} for TLGs", args[1]);
+    let dir_name = &args[1];
+    let default_output = &String::from("/**/data_analysis/*csr*/prod/output/");
 
-    learn_io::setup_test_files()?;
-    let b_dirs = learn_io::prod_dirs(&args[1]);
+    let output_dir = if args.len().clone() == 3 {
+        &args[2]
+    } else {
+        &default_output
+    };
+
+    println!("Searching directory {} for TLGs", &dir_name);
+
+    let b_dirs = learn_io::prod_dirs(&dir_name, &output_dir);
     learn_io::run(b_dirs)?;
     Ok(())
 }
