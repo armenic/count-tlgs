@@ -1,5 +1,5 @@
 [package]
-name = "learn-io"
+name = "count-tlgs"
 version = "0.1.0"
 edition = "2021"
 

@@ -19,7 +19,7 @@ fn main() -> io::Result<()> {
 
     println!("Searching directory {} for TLGs", &dir_name);
 
-    let b_dirs = learn_io::prod_dirs(&dir_name, &output_dir);
-    learn_io::run(b_dirs)?;
+    let b_dirs = count_tlgs::prod_dirs(&dir_name, &output_dir);
+    count_tlgs::run(b_dirs)?;
     Ok(())
 }
