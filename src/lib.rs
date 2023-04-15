@@ -164,6 +164,7 @@ mod prod_dirs_tests {
 
     #[test]
     fn test_prod_dirs() {
+        // Do not remove leading / from a glob, it gives PatternError
         let mut b_dirs = prod_dirs("zzz", "/**/data_analysis/*csr*/prod/output/");
         b_dirs.sort();
 
@@ -181,8 +182,11 @@ mod prod_dirs_tests {
     }
 }
 
+#[derive(Debug)]
+struct DirList(HashMap<PathBuf, HashMap<String, i32>>);
+
 pub fn run(b_dirs: Vec<PathBuf>) -> io::Result<()> {
-    let mut dir_names = HashMap::new();
+    let mut dir_names = DirList(HashMap::new());
 
     for bd in b_dirs {
         let mut counts = HashMap::new();
@@ -209,7 +213,7 @@ pub fn run(b_dirs: Vec<PathBuf>) -> io::Result<()> {
             *counter += 1;
         }
 
-        dir_names.insert(
+        dir_names.0.insert(
             bd.parent().unwrap().parent().unwrap().to_owned(),
             counts.to_owned(),
         );
