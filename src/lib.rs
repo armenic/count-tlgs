@@ -1,5 +1,6 @@
 use glob::{glob_with, MatchOptions};
 use std::collections::HashMap;
+use std::fmt;
 use std::fs::{self, OpenOptions};
 use std::io;
 use std::path::PathBuf;
@@ -121,10 +122,10 @@ fn group_tlg(file_name: &str) -> String {
     let first_two_chars: String = file_name.chars().take(2).collect();
 
     let temp = match first_two_chars.as_str() {
-        "t_" => "table",
-        "l_" => "listing",
-        "g_" => "graph",
-        _ => "other",
+        "t_" => "1. table",
+        "l_" => "2. listing",
+        "g_" => "3. graph",
+        _ => "4. other",
     };
 
     String::from(temp)
@@ -183,7 +184,32 @@ mod prod_dirs_tests {
 }
 
 #[derive(Debug)]
-struct DirList(HashMap<PathBuf, HashMap<String, i32>>);
+struct DirList(HashMap<String, HashMap<String, i32>>);
+
+impl fmt::Display for DirList {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let dir_list = &self.0;
+        let mut keys: Vec<_> = dir_list.keys().collect();
+        keys.sort();
+
+        for k in keys {
+            let count_list = dir_list.get(k).unwrap();
+            writeln!(f, "{}", k)?;
+
+            let mut count_keys: Vec<_> = count_list.keys().collect();
+            count_keys.sort();
+
+            for ck in count_keys {
+                let v = count_list.get(ck).unwrap();
+                writeln!(f, "{}: {}", ck, v)?;
+            }
+
+            writeln!(f, "")?
+        }
+
+        write!(f, "")
+    }
+}
 
 pub fn run(b_dirs: Vec<PathBuf>) -> io::Result<()> {
     let mut dir_names = DirList(HashMap::new());
@@ -214,12 +240,18 @@ pub fn run(b_dirs: Vec<PathBuf>) -> io::Result<()> {
         }
 
         dir_names.0.insert(
-            bd.parent().unwrap().parent().unwrap().to_owned(),
+            bd.parent()
+                .unwrap()
+                .parent()
+                .unwrap()
+                .to_str()
+                .unwrap()
+                .to_owned(),
             counts.to_owned(),
         );
     }
 
-    println!("{:#?}", dir_names);
+    println!("{}", dir_names);
 
     Ok(())
 }
