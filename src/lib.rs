@@ -137,10 +137,10 @@ mod tlg_tests {
 
     #[test]
     fn test_tlg() {
-        assert_eq!(group_tlg("l_abc.out"), "listing");
-        assert_eq!(group_tlg("t_abc.out"), "table");
-        assert_eq!(group_tlg("g_abc.out"), "graph");
-        assert_eq!(group_tlg("ll_abc.out"), "other");
+        assert_eq!(group_tlg("t_abc.out"), "1. table");
+        assert_eq!(group_tlg("l_abc.out"), "2. listing");
+        assert_eq!(group_tlg("g_abc.out"), "3. graph");
+        assert_eq!(group_tlg("ll_abc.out"), "4. other");
     }
 }
 
