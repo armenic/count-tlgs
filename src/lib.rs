@@ -122,10 +122,10 @@ fn group_tlg(file_name: &str) -> String {
     let first_two_chars: String = file_name.chars().take(2).collect();
 
     let temp = match first_two_chars.as_str() {
-        "t_" => "1. table",
-        "l_" => "2. listing",
-        "g_" => "3. graph",
-        _ => "4. other",
+        "t_" => "table",
+        "l_" => "listing",
+        "g_" => "graph",
+        _ => "other",
     };
 
     String::from(temp)
@@ -137,10 +137,10 @@ mod tlg_tests {
 
     #[test]
     fn test_tlg() {
-        assert_eq!(group_tlg("t_abc.out"), "1. table");
-        assert_eq!(group_tlg("l_abc.out"), "2. listing");
-        assert_eq!(group_tlg("g_abc.out"), "3. graph");
-        assert_eq!(group_tlg("ll_abc.out"), "4. other");
+        assert_eq!(group_tlg("t_abc.out"), "table");
+        assert_eq!(group_tlg("l_abc.out"), "listing");
+        assert_eq!(group_tlg("g_abc.out"), "graph");
+        assert_eq!(group_tlg("ll_abc.out"), "other");
     }
 }
 
@@ -197,7 +197,18 @@ impl fmt::Display for DirList {
             writeln!(f, "{}", k)?;
 
             let mut count_keys: Vec<_> = count_list.keys().collect();
-            count_keys.sort();
+
+            count_keys.sort_by_key(|k| {
+                if k.to_string() == "table" {
+                    1
+                } else if k.to_string() == "listing" {
+                    2
+                } else if k.to_string() == "graph" {
+                    3
+                } else {
+                    4
+                }
+            });
 
             for ck in count_keys {
                 let v = count_list.get(ck).unwrap();
