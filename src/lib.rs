@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::fmt;
 use std::fs::{self, OpenOptions};
 use std::io;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use walkdir::{DirEntry, WalkDir};
 
 const DIRS: [&str; 3] = ["zzz/a", "zzz/d", "zzz/g"];
@@ -19,7 +19,9 @@ const FILES: [&str; 7] = [
 
 fn clean_many_dirs() -> io::Result<()> {
     for dir in DIRS {
-        fs::remove_dir_all(dir)?
+        if Path::exists(Path::new(&dir.to_string())) {
+            fs::remove_dir_all(dir)?
+        }
     }
 
     Ok(())
@@ -69,7 +71,7 @@ pub fn setup_test_files() -> io::Result<()> {
 }
 
 #[cfg(test)]
-mod setup_tests {
+mod t_aa_setup_tests {
     use super::*;
 
     #[test]
@@ -132,7 +134,7 @@ fn group_tlg(file_name: &str) -> String {
 }
 
 #[cfg(test)]
-mod tlg_tests {
+mod t_ab_tlg_tests {
     use super::*;
 
     #[test]
@@ -160,7 +162,7 @@ pub fn prod_dirs(dir_name: &str, output_dir: &str) -> Vec<PathBuf> {
 }
 
 #[cfg(test)]
-mod prod_dirs_tests {
+mod t_ac_prod_dirs_tests {
     use super::*;
 
     #[test]
@@ -268,7 +270,7 @@ pub fn run(b_dirs: Vec<PathBuf>) -> io::Result<()> {
 }
 
 #[cfg(test)]
-mod run_tests {
+mod t_ad_run_tests {
     use super::*;
 
     #[test]
