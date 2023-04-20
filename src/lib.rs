@@ -194,9 +194,11 @@ impl fmt::Display for DirList {
         let mut keys: Vec<_> = dir_list.keys().collect();
         keys.sort();
 
-        for k in keys {
-            let count_list = dir_list.get(k).unwrap();
-            writeln!(f, "{}", k)?;
+        let mut grand_total = 0;
+
+        for dir in keys {
+            let count_list = dir_list.get(dir).unwrap();
+            writeln!(f, "{}", dir)?;
 
             let mut count_keys: Vec<_> = count_list.keys().collect();
 
@@ -212,15 +214,21 @@ impl fmt::Display for DirList {
                 }
             });
 
+            // Total per directory
+            let mut dir_total = 0;
+
             for ck in count_keys {
                 let v = count_list.get(ck).unwrap();
+                dir_total += v;
                 writeln!(f, "{}: {}", ck, v)?;
             }
 
-            writeln!(f, "")?
+            grand_total += dir_total;
+
+            writeln!(f, "Total: {}\n", dir_total)?
         }
 
-        write!(f, "")
+        write!(f, "Grand total: {}", grand_total)
     }
 }
 
